@@ -134,6 +134,9 @@ export class GeocoderControl extends EventedControl {
   private _form: HTMLDivElement;
   private _geocodeMarker: L.Marker;
   private _input: HTMLInputElement;
+  private _durationInput: HTMLInputElement;
+  private _addButton: HTMLButtonElement;
+  public selectedResult: GeocodingResult;
   private _lastGeocode: string;
   private _map: L.Map;
   private _preventBlurCollapse: boolean;
@@ -184,11 +187,29 @@ export class GeocoderControl extends EventedControl {
     icon.type = 'button';
     icon.setAttribute('aria-label', this.options.iconLabel);
 
-    const input = (this._input = L.DomUtil.create('input', '', form) as HTMLInputElement);
-    input.type = 'search';
-    input.value = this.options.query;
-    input.placeholder = this.options.placeholder;
-    L.DomEvent.disableClickPropagation(input);
+    const placeInput = (this._input = L.DomUtil.create('input', '', form) as HTMLInputElement);
+    placeInput.setAttribute('id', 'place')
+    placeInput.type = 'search';
+    placeInput.value = this.options.query;
+    placeInput.placeholder = this.options.placeholder;
+    L.DomEvent.disableClickPropagation(placeInput);
+
+    const durationLabel = L.DomUtil.create('label') as HTMLLabelElement;
+    durationLabel.setAttribute("for","duration");
+    durationLabel.innerHTML = "Stop duration: "
+    form.appendChild(durationLabel);
+
+    const durationInput = (this._durationInput = L.DomUtil.create('input', '', form) as HTMLInputElement);
+    durationInput.setAttribute('id', 'duration')
+    durationInput.type = 'number';
+    durationInput.value = '0';
+    durationInput.placeholder = 'Stop duration';
+    L.DomEvent.disableClickPropagation(durationInput);
+
+    const addButton = (this._addButton = L.DomUtil.create('input', 'add-place-button', form) as HTMLButtonElement);
+    addButton.type = 'button'
+    addButton.value = 'Add'
+    L.DomEvent.disableClickPropagation(addButton);
 
     this._errorElement = L.DomUtil.create(
       'div',
@@ -204,15 +225,27 @@ export class GeocoderControl extends EventedControl {
     ) as HTMLUListElement;
     L.DomEvent.disableClickPropagation(this._alts);
 
-    L.DomEvent.addListener(input, 'keydown', this._keydown, this);
+    L.DomEvent.addListener(placeInput, 'keydown', this._keydown, this);
     if (this.options.geocoder.suggest) {
-      L.DomEvent.addListener(input, 'input', this._change, this);
+      L.DomEvent.addListener(placeInput, 'input', this._change, this);
     }
-    L.DomEvent.addListener(input, 'blur', () => {
+    L.DomEvent.addListener(placeInput, 'blur', () => {
       if (this.options.collapsed && !this._preventBlurCollapse) {
         this._collapse();
       }
       this._preventBlurCollapse = false;
+    });
+
+    L.DomEvent.addListener(addButton, 'click', (e: Event) => {
+      const data = {
+        'duration': Number(durationInput.value),
+        'location': this.selectedResult
+      }
+      console.log(data)
+      if (this._geocodeMarker) {
+        this._map.removeLayer(this._geocodeMarker);
+      }
+      map.fireEvent('addPlace', data)
     });
 
     if (this.options.collapsed) {
@@ -339,6 +372,7 @@ export class GeocoderControl extends EventedControl {
 
   private _geocodeResultSelected(geocode: GeocodingResult) {
     const event: MarkGeocodeEvent = { geocode };
+    this.selectedResult = geocode
     this.fire('markgeocode', event);
   }
 

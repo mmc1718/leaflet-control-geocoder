@@ -201,9 +201,9 @@ export class GeocoderControl extends EventedControl {
 
     const durationInput = (this._durationInput = L.DomUtil.create('input', '', form) as HTMLInputElement);
     durationInput.setAttribute('id', 'duration')
-    durationInput.type = 'number';
-    durationInput.value = '0';
-    durationInput.placeholder = 'Stop duration';
+    durationInput.type = 'time';
+    durationInput.value = '00:05';
+    durationInput.placeholder = 'Stop duration (HH:MM)';
     L.DomEvent.disableClickPropagation(durationInput);
 
     const addButton = (this._addButton = L.DomUtil.create('input', 'add-place-button', form) as HTMLButtonElement);

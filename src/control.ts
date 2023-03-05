@@ -202,7 +202,7 @@ export class GeocoderControl extends EventedControl {
     const durationInput = (this._durationInput = L.DomUtil.create('input', '', form) as HTMLInputElement);
     durationInput.setAttribute('id', 'duration')
     durationInput.type = 'time';
-    durationInput.value = '00:05';
+    durationInput.value = '00:00';
     durationInput.placeholder = 'Stop duration (HH:MM)';
     L.DomEvent.disableClickPropagation(durationInput);
 
@@ -237,8 +237,12 @@ export class GeocoderControl extends EventedControl {
     });
 
     L.DomEvent.addListener(addButton, 'click', (e: Event) => {
+      const time = durationInput.value.split(':')
+      const hours = Number(time[0])
+      const mins = Number(time[1])
+      const duration = (mins * 60) + (hours * 60 * 60)
       const data = {
-        'duration': Number(durationInput.value),
+        'duration': duration,
         'location': this.selectedResult
       }
       console.log(data)
